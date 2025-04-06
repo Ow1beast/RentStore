@@ -12,3 +12,10 @@ class UserCreate(BaseModel):
     name: str
     email: str
     password: str
+
+class ProductCreate(BaseModel):
+    name: str
+    description: str
+    price_per_day: int
+    purchase_price: int
+    quantity: int

@@ -31,4 +31,37 @@ def read_users_me(current_user: models.User = Depends(auth.get_current_user)):
 def get_products(db: Session = Depends(get_db)):
     return db.query(models.Product).all()
 
+from datetime import datetime
+from fastapi import HTTPException
+
+@app.post("/rent/{product_id}")
+def rent_product(product_id: int, user: models.User = Depends(auth.get_current_user), db: Session = Depends(get_db)):
+    product = db.query(models.Product).filter_by(id=product_id).first()
+    if not product or product.quantity < 1:
+        raise HTTPException(status_code=400, detail="Товар недоступен для аренды")
+    product.quantity -= 1
+    db.add(models.Rental(user_id=user.id, product_id=product.id))
+    db.commit()
+    return {"message": "Товар арендован"}
+
+@app.post("/buy/{product_id}")
+def buy_product(product_id: int, user: models.User = Depends(auth.get_current_user), db: Session = Depends(get_db)):
+    product = db.query(models.Product).filter_by(id=product_id).first()
+    if not product or product.quantity < 1:
+        raise HTTPException(status_code=400, detail="Товар недоступен для покупки")
+    product.quantity -= 1
+    db.add(models.Purchase(user_id=user.id, product_id=product.id))
+    db.commit()
+    return {"message": "Товар куплен"}
+
+from fastapi import Body
+
+@app.post("/products/")
+def create_product(product: schemas.ProductCreate, db: Session = Depends(get_db), user: models.User = Depends(auth.get_current_user)):
+    db_product = models.Product(**product.dict())
+    db.add(db_product)
+    db.commit()
+    db.refresh(db_product)
+    return db_product
+
 app.mount("/", StaticFiles(directory="static", html=True), name="static")

@@ -16,3 +16,17 @@ class Product(Base):
     price_per_day = Column(Integer)
     purchase_price = Column(Integer)
     quantity = Column(Integer)
+
+class Rental(Base):
+    __tablename__ = "rentals"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    product_id = Column(Integer, ForeignKey("products.id"))
+    rented_at = Column(DateTime, default=datetime.utcnow)
+
+class Purchase(Base):
+    __tablename__ = "purchases"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    product_id = Column(Integer, ForeignKey("products.id"))
+    purchased_at = Column(DateTime, default=datetime.utcnow)
