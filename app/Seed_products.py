@@ -1,6 +1,6 @@
-from app.database import SessionLocal
-from app import models
-
+from . import auth, crud, schemas, models
+from .deps import get_db
+from .database import engine, SessionLocal
 products = [
     {
         "name": "MacBook Pro 14 M1",
