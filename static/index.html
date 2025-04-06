@@ -10,10 +10,11 @@
     input, button { padding: 0.5rem; margin: 0.25rem; border-radius: 4px; border: 1px solid #ccc; }
     button { cursor: pointer; }
     #productList { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; }
-    #paymentModal { display:none; position:fixed; top:10%; left:50%; transform:translateX(-50%); background:#fff; padding:1rem; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.3); z-index:999; }
   </style>
 </head>
 <body>
+  <h1>Electro Rental Store</h1>
+
   <div id="authSection">
     <form id="registerForm">
       <h2>Регистрация</h2>
@@ -24,7 +25,7 @@
     </form>
     <form id="loginForm">
       <h2>Вход</h2>
-      <input type="text" id="username" placeholder="Email" required />
+      <input type="text" id="email" placeholder="Email" required />
       <input type="password" id="password" placeholder="Пароль" required />
       <button type="submit">Войти</button>
     </form>
@@ -56,30 +57,17 @@
       <button onclick="loadHistory()">Мои покупки и аренды</button>
       <div id="historyOutput" class="result"></div>
     </div>
+  </div>
 
     <div id="adminPanel" style="display:none;">
-      <h2>Панель администратора</h2>
-      <button onclick="loadUsers()">Показать пользователей</button>
-      <div id="userList" class="result"></div>
+  <h2>Панель администратора</h2>
+  <button onclick="loadUsers()">Показать пользователей</button>
+  <div id="userList" class="result"></div>
+</div>
+</div>
     </div>
-  </div>
 
-  <div id="paymentModal">
-    <h3>Введите платежные данные</h3>
-    <input type="text" id="cardNumber" placeholder="Номер карты" required><br>
-    <input type="text" id="cardHolder" placeholder="Имя на карте" required><br>
-    <input type="text" id="expiry" placeholder="MM/YY" required><br>
-    <input type="text" id="cvc" placeholder="CVC" required><br>
-    <div id="rentalDurationBlock" style="display:none;">
-      <label>Срок аренды (дней):</label>
-      <input type="number" id="rentalDays" min="1" value="1" onchange="updateRentalPrice()"><br>
-      <div id="calculatedPrice" style="margin-top:0.5rem;"></div>
-    </div>
-    <button onclick="confirmTransaction()">Подтвердить</button>
-    <button onclick="closeModal()">Отмена</button>
-  </div>
-
-  <script>
+<script>
     let token = localStorage.getItem("jwtToken");
 
     if (token) {
@@ -90,12 +78,12 @@
     }
 
     function logout() {
-      localStorage.removeItem("jwtToken");
-      token = null;
-      document.getElementById("authSection").style.display = "block";
-      document.getElementById("mainSection").style.display = "none";
-      document.getElementById("adminPanel").style.display = "none";
-    }
+  localStorage.removeItem("jwtToken");
+  token = null;
+  document.getElementById("authSection").style.display = "block";
+  document.getElementById("mainSection").style.display = "none";
+  document.getElementById("adminPanel").style.display = "none";
+}
 
     document.getElementById("registerForm").addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -106,16 +94,18 @@
       const res = await fetch("http://13.60.43.210:8000/users/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password })
+        body: JSON.stringify({ name, email, password }),
       });
       const data = await res.json();
+
       if (data.id) {
         const formData = new FormData();
-        formData.append("username", username);
+        formData.append("username", email);
         formData.append("password", password);
+
         const tokenRes = await fetch("http://13.60.43.210:8000/token", {
           method: "POST",
-          body: formData
+          body: formData,
         });
         const tokenData = await tokenRes.json();
         if (tokenData.access_token) {
@@ -131,16 +121,19 @@
 
     document.getElementById("loginForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const username = document.getElementById("username").value;
+      const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
+
       const formData = new FormData();
       formData.append("username", email);
       formData.append("password", password);
+
       const res = await fetch("http://13.60.43.210:8000/token", {
         method: "POST",
-        body: formData
+        body: formData,
       });
       const data = await res.json();
+
       if (data.access_token) {
         token = data.access_token;
         localStorage.setItem("jwtToken", token);
@@ -153,14 +146,23 @@
 
     async function getMe() {
       const res = await fetch("http://13.60.43.210:8000/users/me", {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
+
       document.getElementById("meOutput").innerHTML = `<strong>Имя:</strong> ${data.name}<br><strong>Email:</strong> ${data.email}`;
       const welcome = document.querySelector("h2");
-      if (welcome && data.name) welcome.textContent = `Добро пожаловать, ${data.name}!`;
-      document.getElementById("addProductForm").style.display = data.is_admin ? "block" : "none";
-      document.getElementById("adminPanel").style.display = data.is_admin ? "block" : "none";
+      if (welcome && data.name) {
+        welcome.textContent = `Добро пожаловать, ${data.name}!`;
+      }
+
+      if (!data.is_admin) {
+        document.getElementById("addProductForm").style.display = "none";
+        document.getElementById("adminPanel").style.display = "none";
+      } else {
+        document.getElementById("addProductForm").style.display = "block";
+        document.getElementById("adminPanel").style.display = "block";
+      }
     }
 
     async function loadProducts() {
@@ -172,31 +174,48 @@
         const el = document.createElement("div");
         el.className = "product";
         el.innerHTML = `<strong>${p.name}</strong><br>${p.description}<br><em>Цена за день: ${p.price_per_day} ₸</em><br><em>Покупка: ${p.purchase_price} ₸</em><br><em>Доступно: ${p.quantity}</em><br>
-          <button onclick="showPaymentModal(${p.id}, 'rent', ${p.price_per_day})">Арендовать</button>
-          <button onclick="showPaymentModal(${p.id}, 'buy')">Купить</button>`;
+        <button onclick="rentProduct(${p.id})">Арендовать</button>
+        <button onclick="buyProduct(${p.id})">Купить</button>`;
         container.appendChild(el);
       });
     }
 
-    async function loadHistory() {
-      const res = await fetch("http://13.60.43.210:8000/users/history", {
-        headers: { Authorization: `Bearer ${token}` }
+    async function rentProduct(productId) {
+      const res = await fetch(`http://13.60.43.210:8000/rent/${productId}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      const el = document.getElementById("historyOutput");
-      el.innerHTML = "<h3>Аренды:</h3>" + (data.rentals?.length ?
-        `<ul>${data.rentals.map(r => `<li>${r.product_name} — ${new Date(r.rented_at).toLocaleString()}</li>`).join('')}</ul>` : "<p>Нет аренд.</p>") +
-        "<h3>Покупки:</h3>" + (data.purchases?.length ?
-        `<ul>${data.purchases.map(p => `<li>${p.product_name} — ${new Date(p.purchased_at).toLocaleString()}</li>`).join('')}</ul>` : "<p>Нет покупок.</p>");
+      if (res.ok) {
+        alert("Товар успешно арендован!");
+        loadProducts();
+      } else {
+        alert("Ошибка аренды: " + (data.detail || JSON.stringify(data)));
+      }
+    }
+
+    async function buyProduct(productId) {
+      const res = await fetch(`http://13.60.43.210:8000/buy/${productId}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert("Товар куплен!");
+        loadProducts();
+      } else {
+        alert("Ошибка покупки: " + (data.detail || JSON.stringify(data)));
+      }
     }
 
     async function loadUsers() {
       const res = await fetch("http://13.60.43.210:8000/users/", {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       const users = await res.json();
       const list = document.getElementById("userList");
       list.innerHTML = "";
+
       users.forEach(user => {
         const div = document.createElement("div");
         div.innerHTML = `<strong>${user.name}</strong> (${user.email}) — ${user.is_admin ? 'Админ' : 'Пользователь'}
@@ -208,7 +227,7 @@
     async function makeAdmin(id) {
       await fetch(`http://13.60.43.210:8000/users/${id}/make_admin`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       loadUsers();
     }
@@ -216,66 +235,22 @@
     async function revokeAdmin(id) {
       await fetch(`http://13.60.43.210:8000/users/${id}/revoke_admin`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       loadUsers();
     }
-  
-    let selectedProductId = null;
-    let selectedAction = null;
-    let selectedPricePerDay = 0;
 
-    function showPaymentModal(productId, action, pricePerDay = 0) {
-      selectedProductId = productId;
-      selectedAction = action;
-      selectedPricePerDay = pricePerDay;
-      document.getElementById("paymentModal").style.display = "block";
-      document.getElementById("rentalDurationBlock").style.display = action === 'rent' ? 'block' : 'none';
-      updateRentalPrice();
-    }
-
-    function updateRentalPrice() {
-      const days = parseInt(document.getElementById("rentalDays").value);
-      const total = days * selectedPricePerDay;
-      document.getElementById("calculatedPrice").innerText = `Итого за ${days} дн.: ${total} ₸`;
-    }
-
-    function closeModal() {
-      document.getElementById("paymentModal").style.display = "none";
-    }
-
-    async function confirmTransaction() {
-      const cardNumber = document.getElementById("cardNumber").value;
-      const cardHolder = document.getElementById("cardHolder").value;
-      const expiry = document.getElementById("expiry").value;
-      const cvc = document.getElementById("cvc").value;
-      const days = parseInt(document.getElementById("rentalDays").value);
-      
-      const data = {
-        card_number: cardNumber,
-        card_holder: cardHolder,
-        expiry,
-        cvc,
-        ...(selectedAction === 'rent' ? { days } : {})
-      };
-
-      const res = await fetch(`http://13.60.43.210:8000/${selectedAction}/${selectedProductId}`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
+    async function loadHistory() {
+      const res = await fetch("http://13.60.43.210:8000/users/history", {
+        headers: { Authorization: `Bearer ${token}` },
       });
+      const data = await res.json();
 
-      const result = await res.json();
-      if (res.ok) {
-        alert(selectedAction === 'rent' ? "Аренда подтверждена!" : "Покупка завершена!");
-        closeModal();
-        loadProducts();
-      } else {
-        alert("Ошибка: " + (result.detail || JSON.stringify(result)));
-      }
+      const el = document.getElementById("historyOutput");
+      el.innerHTML = "<h3>Аренды:</h3>" + (data.rentals?.length ?
+        `<ul>${data.rentals.map(r => `<li>${r.product_name} - ${new Date(r.rented_at).toLocaleString()}</li>`).join('')}</ul>` : "<p>Нет аренд.</p>") +
+        "<h3>Покупки:</h3>" + (data.purchases?.length ?
+        `<ul>${data.purchases.map(p => `<li>${p.product_name} - ${new Date(p.purchased_at).toLocaleString()}</li>`).join('')}</ul>` : "<p>Нет покупок.</p>");
     }
   </script>
 </body>
