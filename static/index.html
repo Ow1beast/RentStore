@@ -286,6 +286,7 @@
       if (welcome && data.name) welcome.textContent = `Добро пожаловать, ${data.name}!`;
       document.getElementById("addProductForm").style.display = data.is_admin ? "block" : "none";
       document.getElementById("adminPanel").style.display = data.is_admin ? "block" : "none";
+      document.getElementById("historyOutput").innerHTML = "";
     }
   </script>
 </body>
