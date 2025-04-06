@@ -38,6 +38,7 @@
   <div id="mainSection" style="display: none;">
     <h2>Добро пожаловать!</h2>
     <button onclick="getMe()">Профиль</button>
+    <button onclick="logout()">Выход</button>
     <div class="result" id="meOutput"></div>
 
     <h2>Добавить товар</h2>
@@ -61,6 +62,13 @@
       document.getElementById("authSection").style.display = "none";
       document.getElementById("mainSection").style.display = "block";
       loadProducts();
+    }
+
+    function logout() {
+      localStorage.removeItem("jwtToken");
+      token = null;
+      document.getElementById("authSection").style.display = "block";
+      document.getElementById("mainSection").style.display = "none";
     }
 
     document.getElementById("registerForm").addEventListener("submit", async (e) => {
