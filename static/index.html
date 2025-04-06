@@ -78,11 +78,12 @@
     }
 
     function logout() {
-      localStorage.removeItem("jwtToken");
-      token = null;
-      document.getElementById("authSection").style.display = "block";
-      document.getElementById("mainSection").style.display = "none";
-    }
+  localStorage.removeItem("jwtToken");
+  token = null;
+  document.getElementById("authSection").style.display = "block";
+  document.getElementById("mainSection").style.display = "none";
+  document.getElementById("adminPanel").style.display = "none";
+}
 
     document.getElementById("registerForm").addEventListener("submit", async (e) => {
       e.preventDefault();
