@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean
 from .database import Base
 from datetime import datetime
 
@@ -8,6 +8,7 @@ class User(Base):
     name = Column(String)
     email = Column(String, unique=True)
     password_hash = Column(String)
+    is_admin = Column(Boolean, default=False) 
 
 class Product(Base):
     __tablename__ = "products"

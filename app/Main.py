@@ -64,4 +64,18 @@ def create_product(product: schemas.ProductCreate, db: Session = Depends(get_db)
     db.refresh(db_product)
     return db_product
 
+@app.post("/products/")
+def create_product(
+    product: schemas.ProductCreate,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(auth.get_current_user)
+):
+    if not user.is_admin:
+        raise HTTPException(status_code=403, detail="Доступ запрещён")
+    db_product = models.Product(**product.dict())
+    db.add(db_product)
+    db.commit()
+    db.refresh(db_product)
+    return db_product
+
 app.mount("/", StaticFiles(directory="static", html=True), name="static")

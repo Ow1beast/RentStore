@@ -12,6 +12,7 @@ class UserCreate(BaseModel):
     name: str
     email: str
     password: str
+    is_admin: bool = False
 
 class ProductCreate(BaseModel):
     name: str
