@@ -40,7 +40,13 @@ def rent_product(product_id: int, user: models.User = Depends(auth.get_current_u
     if not product or product.quantity < 1:
         raise HTTPException(status_code=400, detail="Товар недоступен для аренды")
     product.quantity -= 1
-    db.add(models.Rental(user_id=user.id, product_id=product.id))
+    db.add(models.Rental(
+        user_id=user.id,
+        product_id=product_id,
+        rented_at=datetime.utcnow(),
+        days=data.days
+    ))
+
     db.commit()
     return {"message": "Товар арендован"}
 

@@ -27,5 +27,11 @@ class PaymentData(BaseModel):
     expiry: str
     cvc: str
 
-class RentRequest(PaymentData):
+class RentRequest(BaseModel):
+    card_number: str
+    card_holder: str
+    expiry: str
+    cvc: str
     days: int
+
+
