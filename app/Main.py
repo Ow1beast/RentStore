@@ -12,7 +12,9 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
-@app.post("/token", response_model=schemas.Token)
+@app.post("/users/")
+def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    return crud.create_user(db, user)
 def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = crud.get_user(db, form_data.username)
     if not user or not auth.verify_password(form_data.password, user.password_hash):
