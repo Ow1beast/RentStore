@@ -8,7 +8,12 @@ class User(Base):
     name = Column(String)
     email = Column(String, unique=True)
     password_hash = Column(String)
-    is_admin = Column(Boolean, default=False) 
+    is_admin = Column(Boolean, default=False)
+    card_number = Column(String, nullable=True)
+    card_holder = Column(String, nullable=True)
+    expiry = Column(String, nullable=True)
+    cvc = Column(String, nullable=True)
+
 
 class Product(Base):
     __tablename__ = "products"

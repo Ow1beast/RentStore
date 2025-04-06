@@ -127,4 +127,32 @@ def revoke_admin(user_id: int, db: Session = Depends(get_db), user: models.User 
     db.commit()
     return {"detail": "Права администратора сняты"}
 
+@app.post("/buy/{product_id}")
+def buy_product(
+    product_id: int,
+    data: schemas.PaymentData,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(auth.get_current_user)
+):
+    user.card_number = data.card_number
+    user.card_holder = data.card_holder
+    user.expiry = data.expiry
+    user.cvc = data.cvc
+    db.commit()
+    # ... логика покупки
+
+@app.post("/rent/{product_id}")
+def rent_product(
+    product_id: int,
+    data: schemas.RentRequest,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(auth.get_current_user)
+):
+    user.card_number = data.card_number
+    user.card_holder = data.card_holder
+    user.expiry = data.expiry
+    user.cvc = data.cvc
+    db.commit()
+    # ... логика аренды
+
 app.mount("/", StaticFiles(directory="static", html=True), name="static")

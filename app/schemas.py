@@ -20,3 +20,12 @@ class ProductCreate(BaseModel):
     price_per_day: int
     purchase_price: int
     quantity: int
+
+class PaymentData(BaseModel):
+    card_number: str
+    card_holder: str
+    expiry: str
+    cvc: str
+
+class RentRequest(PaymentData):
+    days: int
