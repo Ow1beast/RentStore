@@ -31,6 +31,7 @@ class Rental(Base):
     product_id = Column(Integer, ForeignKey("products.id"))
     rented_at = Column(DateTime, default=datetime.utcnow)
     days = Column(Integer, nullable=True)
+    returned_at = Column(DateTime, nullable=True)
 
 class Purchase(Base):
     __tablename__ = "purchases"
