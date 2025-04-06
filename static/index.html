@@ -55,7 +55,13 @@
   </div>
 
   <script>
-    let token = null;
+    let token = localStorage.getItem("jwtToken");
+
+    if (token) {
+      document.getElementById("authSection").style.display = "none";
+      document.getElementById("mainSection").style.display = "block";
+      loadProducts();
+    }
 
     document.getElementById("registerForm").addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -93,6 +99,7 @@
       const data = await res.json();
       if (data.access_token) {
         token = data.access_token;
+        localStorage.setItem("jwtToken", token);
         document.getElementById("authSection").style.display = "none";
         document.getElementById("mainSection").style.display = "block";
         loadProducts();
