@@ -31,13 +31,6 @@
 </form>
 </div>
 <div id="mainSection" style="display: none;">
-<div style="margin-bottom: 1rem;">
-<button onclick="showSection('products')">Товары</button>
-<button onclick="showSection('cabinet')">Личный кабинет</button>
-<button id="adminButton" onclick="showSection('admin')" style="display:none">Панель администратора</button>
-<button onclick="logout()">Выход</button>
-</div>
-
 <h2>Добро пожаловать!</h2>
 <button onclick="getMe()">Профиль</button>
 <button onclick="logout()">Выход</button>
@@ -51,6 +44,15 @@
 <input id="prodQty" placeholder="Количество" required="" type="number"/>
 <button type="submit">Добавить</button>
 </form>
+<div>
+<h2>Список товаров</h2>
+<div id="productList"></div>
+</div>
+<div>
+
+<button onclick="loadHistory()">Мои покупки и аренды</button>
+<div class="result" id="historyOutput"></div>
+</div>
 <div id="adminPanel" style="display:none">
 <button onclick="loadAdminRentals()">Список аренд</button>
 <div id="adminRentalsOutput"></div>
@@ -58,7 +60,7 @@
 <button onclick="loadUsers()">Показать пользователей</button>
 <div class="result" id="userList"></div>
 </div>
-<div id="productsSection"><h2>Список товаров</h2><div id="productList"></div></div><div id="cabinetSection" style="display: none;"><h2>Личный кабинет</h2><button onclick="loadHistory()">Мои покупки и аренды</button><div class="result" id="historyOutput"></div></div></div>
+</div>
 <div id="paymentModal">
 <h3>Введите платежные данные</h3>
 <input id="cardNumber" placeholder="Номер карты" required="" type="text"/><br/>
@@ -88,7 +90,6 @@
       token = null;
       document.getElementById("authSection").style.display = "block";
       document.getElementById("mainSection").style.display = "none";
-      document.getElementById("adminPanel").style.display = "none";
     }
 
     document.getElementById("registerForm").addEventListener("submit", async (e) => {
@@ -282,7 +283,7 @@
       const welcome = document.querySelector("h2");
       if (welcome && data.name) welcome.textContent = `Добро пожаловать, ${data.name}!`;
       document.getElementById("addProductForm").style.display = data.is_admin ? "block" : "none";
-      document.getElementById("adminPanel").style.display = data.is_admin ? "block" : "none";
+      document.getElementById("adminButton").style.display = data.is_admin ? "inline-block" : "none";
       document.getElementById("historyOutput").innerHTML = "";
     }
       async function loadAdminRentals() {
@@ -316,14 +317,6 @@
               }).join('')}
             </table>` : "<p>Нет аренд.</p>");
       }
-  
-function showSection(name) {
-  document.getElementById("productsSection").style.display = name === 'products' ? "block" : "none";
-  document.getElementById("cabinetSection").style.display = name === 'cabinet' ? "block" : "none";
-  document.getElementById("adminPanel").style.display = name === 'admin' ? "block" : "none";
-}
-
-document.getElementById("adminButton").style.display = data.is_admin ? "inline-block" : "none";
-</script>
+  </script>
 </body>
 </html>
