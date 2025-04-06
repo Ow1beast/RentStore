@@ -102,7 +102,24 @@
 
       const data = await res.json();
       if (data.id) {
-        alert("Успешная регистрация!");
+        // Автоматическая авторизация после регистрации
+        const formData = new FormData();
+        formData.append("username", email);
+        formData.append("password", password);
+
+        const tokenRes = await fetch("http://13.60.43.210:8000/token", {
+          method: "POST",
+          body: formData,
+        });
+        const tokenData = await tokenRes.json();
+        if (tokenData.access_token) {
+          token = tokenData.access_token;
+          localStorage.setItem("jwtToken", token);
+          document.getElementById("authSection").style.display = "none";
+          document.getElementById("mainSection").style.display = "block";
+          getMe();
+          loadProducts();
+        }
       } else {
         alert("Ошибка при регистрации: " + (data.detail || JSON.stringify(data)));
       }
@@ -127,6 +144,7 @@
         localStorage.setItem("jwtToken", token);
         document.getElementById("authSection").style.display = "none";
         document.getElementById("mainSection").style.display = "block";
+        getMe();      
         loadProducts();
       } else {
         alert("Ошибка входа: " + (data.detail || JSON.stringify(data)));
@@ -166,6 +184,10 @@
       });
       const data = await res.json();
       document.getElementById("meOutput").innerText = JSON.stringify(data, null, 2);
+      const welcome = document.querySelector("h2");
+      if (welcome && data.name) {
+        welcome.textContent = `Добро пожаловать, ${data.name}!`;
+      }
     }
 
     async function loadProducts() {
