@@ -116,4 +116,15 @@ def make_user_admin(user_id: int, db: Session = Depends(get_db), user: models.Us
     db.commit()
     return {"message": "Пользователь теперь администратор"}
 
+@app.post("/users/{user_id}/revoke_admin")
+def revoke_admin(user_id: int, db: Session = Depends(get_db), user: models.User = Depends(auth.get_current_user)):
+    if not user.is_admin:
+        raise HTTPException(status_code=403, detail="Недостаточно прав")
+    target_user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not target_user:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+    target_user.is_admin = False
+    db.commit()
+    return {"detail": "Права администратора сняты"}
+
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
