@@ -111,7 +111,7 @@
       const data = await res.json();
       if (data.id) {
         const formData = new FormData();
-        formData.append("username", username);
+        formData.append("username", email);
         formData.append("password", password);
         const tokenRes = await fetch("http://13.60.43.210:8000/token", {
           method: "POST",
