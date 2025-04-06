@@ -59,7 +59,13 @@
     </div>
   </div>
 
-  <script>
+    <div id="adminPanel" style="display:none;">
+      <h2>Панель администратора</h2>
+      <button onclick="loadUsers()">Показать пользователей</button>
+      <div id="userList" class="result"></div>
+    </div>
+
+<script>
     let token = localStorage.getItem("jwtToken");
 
     if (token) {
@@ -149,8 +155,10 @@
 
       if (!data.is_admin) {
         document.getElementById("addProductForm").style.display = "none";
+        document.getElementById("adminPanel").style.display = "none";
       } else {
         document.getElementById("addProductForm").style.display = "block";
+        document.getElementById("adminPanel").style.display = "block";
       }
     }
 
@@ -195,6 +203,38 @@
       } else {
         alert("Ошибка покупки: " + (data.detail || JSON.stringify(data)));
       }
+    }
+
+    async function loadUsers() {
+      const res = await fetch("http://13.60.43.210:8000/users/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const users = await res.json();
+      const list = document.getElementById("userList");
+      list.innerHTML = "";
+
+      users.forEach(user => {
+        const div = document.createElement("div");
+        div.innerHTML = `<strong>${user.name}</strong> (${user.email}) — ${user.is_admin ? 'Админ' : 'Пользователь'}
+          ${user.is_admin ? `<button onclick='revokeAdmin(${user.id})'>Снять права</button>` : `<button onclick='makeAdmin(${user.id})'>Сделать админом</button>`}`;
+        list.appendChild(div);
+      });
+    }
+
+    async function makeAdmin(id) {
+      await fetch(`http://13.60.43.210:8000/users/${id}/make_admin`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      loadUsers();
+    }
+
+    async function revokeAdmin(id) {
+      await fetch(`http://13.60.43.210:8000/users/${id}/revoke_admin`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      loadUsers();
     }
 
     async function loadHistory() {
