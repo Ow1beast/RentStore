@@ -29,7 +29,7 @@ def read_users_me(current_user: models.User = Depends(auth.get_current_user)):
 
 @app.get("/products/")
 def get_products(db: Session = Depends(get_db)):
-    return db.query(models.Product).all()
+    return db.query(models.Product).filter(models.Product.quantity > 0).all()
 
 @app.post("/rent/{product_id}")
 def rent_product(
