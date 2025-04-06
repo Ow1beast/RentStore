@@ -181,6 +181,7 @@
       });
       const data = await res.json();
       const el = document.getElementById("historyOutput");
+      el.innerHTML = "";
       el.innerHTML = "<h3>Аренды:</h3>" + (data.rentals?.length ?
         `<ul>${data.rentals.map(r => `<li>${r.product_name} — ${new Date(r.rented_at).toLocaleString()}</li>`).join('')}</ul>` : "<p>Нет аренд.</p>") +
         "<h3>Покупки:</h3>" + (data.purchases?.length ?
