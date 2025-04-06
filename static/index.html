@@ -57,7 +57,9 @@
       <div id="historyOutput" class="result"></div>
     </div>
 
-    <div id="adminPanel" style="display:none;">
+    <div id="adminPanel" style="display:none">
+      <button onclick="loadAdminRentals()">Список аренд</button>
+      <div id="adminRentalsOutput"></div>
       <h2>Панель администратора</h2>
       <button onclick="loadUsers()">Показать пользователей</button>
       <div id="userList" class="result"></div>
@@ -290,6 +292,18 @@
       document.getElementById("addProductForm").style.display = data.is_admin ? "block" : "none";
       document.getElementById("adminPanel").style.display = data.is_admin ? "block" : "none";
       document.getElementById("historyOutput").innerHTML = "";
+    }
+    async function loadAdminRentals() {
+    const res = await fetch("http://13.60.43.210:8000/admin/rentals", {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json();
+    const out = document.getElementById("adminRentalsOutput");
+    out.innerHTML = `<h3>Аренды всех пользователей</h3>` +
+      (data.length ?
+        `<table><tr><th>Пользователь</th><th>Email</th><th>Товар</th><th>Дата аренды</th><th>Дней</th><th>Завершена</th></tr>
+        ${data.map(r => `<tr><td>${r.user_name}</td><td>${r.user_email}</td><td>${r.product_name}</td><td>${new Date(r.rented_at).toLocaleString()}</td><td>${r.days ?? ''}</td><td>${r.returned_at ? new Date(r.returned_at).toLocaleString() : '—'}</td></tr>`).join('')}
+        </table>` : "<p>Нет аренд.</p>");
     }
   </script>
 </body>

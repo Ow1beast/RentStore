@@ -11,7 +11,6 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-
 @app.post("/users/")
 def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     return crud.create_user(db, user)
@@ -144,5 +143,25 @@ def revoke_admin(user_id: int, db: Session = Depends(get_db), user: models.User 
     target_user.is_admin = False
     db.commit()
     return {"detail": "Права администратора сняты"}
+
+@app.get("/admin/rentals")
+def admin_rental_overview(db: Session = Depends(get_db), user: models.User = Depends(auth.get_current_user)):
+    if not user.is_admin:
+        raise HTTPException(status_code=403, detail="Доступ запрещён")
+
+    rentals = db.query(models.Rental).all()
+    result = []
+    for rental in rentals:
+        u = db.query(models.User).filter(models.User.id == rental.user_id).first()
+        p = db.query(models.Product).filter(models.Product.id == rental.product_id).first()
+        result.append({
+            "user_name": u.name,
+            "user_email": u.email,
+            "product_name": p.name,
+            "rented_at": rental.rented_at,
+            "days": rental.days,
+            "returned_at": rental.returned_at
+        })
+    return result
 
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
