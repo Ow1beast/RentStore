@@ -220,6 +220,63 @@
       });
       loadUsers();
     }
+  
+    let selectedProductId = null;
+    let selectedAction = null;
+    let selectedPricePerDay = 0;
+
+    function showPaymentModal(productId, action, pricePerDay = 0) {
+      selectedProductId = productId;
+      selectedAction = action;
+      selectedPricePerDay = pricePerDay;
+      document.getElementById("paymentModal").style.display = "block";
+      document.getElementById("rentalDurationBlock").style.display = action === 'rent' ? 'block' : 'none';
+      updateRentalPrice();
+    }
+
+    function updateRentalPrice() {
+      const days = parseInt(document.getElementById("rentalDays").value);
+      const total = days * selectedPricePerDay;
+      document.getElementById("calculatedPrice").innerText = `Итого за ${days} дн.: ${total} ₸`;
+    }
+
+    function closeModal() {
+      document.getElementById("paymentModal").style.display = "none";
+    }
+
+    async function confirmTransaction() {
+      const cardNumber = document.getElementById("cardNumber").value;
+      const cardHolder = document.getElementById("cardHolder").value;
+      const expiry = document.getElementById("expiry").value;
+      const cvc = document.getElementById("cvc").value;
+      const days = parseInt(document.getElementById("rentalDays").value);
+      
+      const data = {
+        card_number: cardNumber,
+        card_holder: cardHolder,
+        expiry,
+        cvc,
+        ...(selectedAction === 'rent' ? { days } : {})
+      };
+
+      const res = await fetch(`http://13.60.43.210:8000/${selectedAction}/${selectedProductId}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      });
+
+      const result = await res.json();
+      if (res.ok) {
+        alert(selectedAction === 'rent' ? "Аренда подтверждена!" : "Покупка завершена!");
+        closeModal();
+        loadProducts();
+      } else {
+        alert("Ошибка: " + (result.detail || JSON.stringify(result)));
+      }
+    }
   </script>
 </body>
 </html>
