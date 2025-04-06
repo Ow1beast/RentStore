@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from datetime import timedelta
+from datetime import timedelta, datetime
 from fastapi.staticfiles import StaticFiles
 from . import auth, crud, schemas, models
 from .deps import get_db
@@ -31,44 +31,53 @@ def read_users_me(current_user: models.User = Depends(auth.get_current_user)):
 def get_products(db: Session = Depends(get_db)):
     return db.query(models.Product).all()
 
-from datetime import datetime
-from fastapi import HTTPException
-
 @app.post("/rent/{product_id}")
-def rent_product(product_id: int, user: models.User = Depends(auth.get_current_user), db: Session = Depends(get_db)):
+def rent_product(
+    product_id: int,
+    data: schemas.RentRequest,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(auth.get_current_user)
+):
     product = db.query(models.Product).filter_by(id=product_id).first()
     if not product or product.quantity < 1:
         raise HTTPException(status_code=400, detail="Товар недоступен для аренды")
+
     product.quantity -= 1
     db.add(models.Rental(
         user_id=user.id,
-        product_id=product_id,
+        product_id=product.id,
         rented_at=datetime.utcnow(),
         days=data.days
     ))
+
+    user.card_number = data.card_number
+    user.card_holder = data.card_holder
+    user.expiry = data.expiry
+    user.cvc = data.cvc
 
     db.commit()
     return {"message": "Товар арендован"}
 
 @app.post("/buy/{product_id}")
-def buy_product(product_id: int, user: models.User = Depends(auth.get_current_user), db: Session = Depends(get_db)):
+def buy_product(
+    product_id: int,
+    data: schemas.PaymentData,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(auth.get_current_user)
+):
     product = db.query(models.Product).filter_by(id=product_id).first()
     if not product or product.quantity < 1:
         raise HTTPException(status_code=400, detail="Товар недоступен для покупки")
     product.quantity -= 1
     db.add(models.Purchase(user_id=user.id, product_id=product.id))
+
+    user.card_number = data.card_number
+    user.card_holder = data.card_holder
+    user.expiry = data.expiry
+    user.cvc = data.cvc
+
     db.commit()
     return {"message": "Товар куплен"}
-
-from fastapi import Body
-
-@app.post("/products/")
-def create_product(product: schemas.ProductCreate, db: Session = Depends(get_db), user: models.User = Depends(auth.get_current_user)):
-    db_product = models.Product(**product.dict())
-    db.add(db_product)
-    db.commit()
-    db.refresh(db_product)
-    return db_product
 
 @app.post("/products/")
 def create_product(
@@ -96,6 +105,8 @@ def get_user_history(
         return {
             "product_name": db.query(models.Product).filter_by(id=obj.product_id).first().name,
             "rented_at": getattr(obj, "rented_at", None),
+            "returned_at": getattr(obj, "returned_at", None),
+            "days": getattr(obj, "days", None),
             "purchased_at": getattr(obj, "purchased_at", None)
         }
 
@@ -132,33 +143,5 @@ def revoke_admin(user_id: int, db: Session = Depends(get_db), user: models.User 
     target_user.is_admin = False
     db.commit()
     return {"detail": "Права администратора сняты"}
-
-@app.post("/buy/{product_id}")
-def buy_product(
-    product_id: int,
-    data: schemas.PaymentData,
-    db: Session = Depends(get_db),
-    user: models.User = Depends(auth.get_current_user)
-):
-    user.card_number = data.card_number
-    user.card_holder = data.card_holder
-    user.expiry = data.expiry
-    user.cvc = data.cvc
-    db.commit()
-    # ... логика покупки
-
-@app.post("/rent/{product_id}")
-def rent_product(
-    product_id: int,
-    data: schemas.RentRequest,
-    db: Session = Depends(get_db),
-    user: models.User = Depends(auth.get_current_user)
-):
-    user.card_number = data.card_number
-    user.card_holder = data.card_holder
-    user.expiry = data.expiry
-    user.cvc = data.cvc
-    db.commit()
-    # ... логика аренды
 
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
