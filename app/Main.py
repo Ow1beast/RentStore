@@ -27,5 +27,8 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
 def read_users_me(current_user: models.User = Depends(auth.get_current_user)):
     return current_user
 
-# 👇 СТАВИМ В САМЫЙ КОНЕЦ
+@app.get("/products/")
+def get_products(db: Session = Depends(get_db)):
+    return db.query(models.Product).all()
+
 app.mount("/", StaticFiles(directory="static", html=True), name="static")

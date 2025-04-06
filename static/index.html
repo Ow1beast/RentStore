@@ -9,29 +9,38 @@
     form { margin-bottom: 2rem; }
     input, button { padding: 0.5rem; margin: 0.25rem; }
     .result { margin-top: 1rem; background: #f0f0f0; padding: 1rem; }
+    #productList { margin-top: 2rem; }
+    .product { border: 1px solid #ccc; padding: 1rem; margin-bottom: 1rem; }
   </style>
 </head>
 <body>
   <h1>Electro Rental Store</h1>
 
-  <h2>Регистрация</h2>
-  <form id="registerForm">
-    <input type="text" id="regName" placeholder="Имя" required />
-    <input type="email" id="regEmail" placeholder="Email" required />
-    <input type="password" id="regPassword" placeholder="Пароль" required />
-    <button type="submit">Зарегистрироваться</button>
-  </form>
+  <div id="authSection">
+    <h2>Регистрация</h2>
+    <form id="registerForm">
+      <input type="text" id="regName" placeholder="Имя" required />
+      <input type="email" id="regEmail" placeholder="Email" required />
+      <input type="password" id="regPassword" placeholder="Пароль" required />
+      <button type="submit">Зарегистрироваться</button>
+    </form>
 
-  <h2>Вход</h2>
-  <form id="loginForm">
-    <input type="text" id="email" placeholder="Email" required />
-    <input type="password" id="password" placeholder="Пароль" required />
-    <button type="submit">Войти</button>
-  </form>
+    <h2>Вход</h2>
+    <form id="loginForm">
+      <input type="text" id="email" placeholder="Email" required />
+      <input type="password" id="password" placeholder="Пароль" required />
+      <button type="submit">Войти</button>
+    </form>
+  </div>
 
-  <h2>Личный кабинет</h2>
-  <button onclick="getMe()">Получить /users/me</button>
-  <div class="result" id="meOutput"></div>
+  <div id="mainSection" style="display: none;">
+    <h2>Добро пожаловать!</h2>
+    <button onclick="getMe()">Профиль</button>
+    <div class="result" id="meOutput"></div>
+
+    <h2>Список товаров</h2>
+    <div id="productList"></div>
+  </div>
 
   <script>
     let token = null;
@@ -72,7 +81,9 @@
       const data = await res.json();
       if (data.access_token) {
         token = data.access_token;
-        alert("Успешный вход!");
+        document.getElementById("authSection").style.display = "none";
+        document.getElementById("mainSection").style.display = "block";
+        loadProducts();
       } else {
         alert("Ошибка входа: " + (data.detail || JSON.stringify(data)));
       }
@@ -86,6 +97,19 @@
       });
       const data = await res.json();
       document.getElementById("meOutput").innerText = JSON.stringify(data, null, 2);
+    }
+
+    async function loadProducts() {
+      const res = await fetch("http://13.60.43.210:8000/products/");
+      const products = await res.json();
+      const container = document.getElementById("productList");
+      container.innerHTML = "";
+      products.forEach(p => {
+        const el = document.createElement("div");
+        el.className = "product";
+        el.innerHTML = `<strong>${p.name}</strong><br>${p.description}<br><em>Цена за день: ${p.price_per_day} ₽</em><br><em>Покупка: ${p.purchase_price} ₽</em><br><em>Доступно: ${p.quantity}</em>`;
+        container.appendChild(el);
+      });
     }
   </script>
 </body>
