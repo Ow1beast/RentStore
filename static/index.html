@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Electro Rental Store</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 2rem; }
+    form { margin-bottom: 2rem; }
+    input, button { padding: 0.5rem; margin: 0.25rem; }
+    .result { margin-top: 1rem; background: #f0f0f0; padding: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Electro Rental Store</h1>
+
+  <h2>Регистрация</h2>
+  <form id="registerForm">
+    <input type="text" id="regName" placeholder="Имя" required />
+    <input type="email" id="regEmail" placeholder="Email" required />
+    <input type="password" id="regPassword" placeholder="Пароль" required />
+    <button type="submit">Зарегистрироваться</button>
+  </form>
+
+  <h2>Вход</h2>
+  <form id="loginForm">
+    <input type="text" id="email" placeholder="Email" required />
+    <input type="password" id="password" placeholder="Пароль" required />
+    <button type="submit">Войти</button>
+  </form>
+
+  <h2>Личный кабинет</h2>
+  <button onclick="getMe()">Получить /users/me</button>
+  <div class="result" id="meOutput"></div>
+
+  <script>
+    let token = null;
+
+    document.getElementById("registerForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name = document.getElementById("regName").value;
+      const email = document.getElementById("regEmail").value;
+      const password = document.getElementById("regPassword").value;
+
+      const res = await fetch("http://13.60.43.210:8000/users/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      const data = await res.json();
+      if (data.id) {
+        alert("Успешная регистрация!");
+      } else {
+        alert("Ошибка при регистрации: " + (data.detail || JSON.stringify(data)));
+      }
+    });
+
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      const formData = new FormData();
+      formData.append("username", email);
+      formData.append("password", password);
+
+      const res = await fetch("http://13.60.43.210:8000/token", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.access_token) {
+        token = data.access_token;
+        alert("Успешный вход!");
+      } else {
+        alert("Ошибка входа: " + (data.detail || JSON.stringify(data)));
+      }
+    });
+
+    async function getMe() {
+      const res = await fetch("http://13.60.43.210:8000/users/me", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await res.json();
+      document.getElementById("meOutput").innerText = JSON.stringify(data, null, 2);
+    }
+  </script>
+</body>
+</html>

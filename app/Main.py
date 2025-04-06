@@ -5,11 +5,13 @@ from datetime import timedelta
 from . import auth, crud, schemas, models
 from .deps import get_db
 from .database import engine
+from fastapi.staticfiles import StaticFiles
+
 
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
-
+app.mount("/", StaticFiles(directory="static", html=True), name="static")
 @app.post("/token", response_model=schemas.Token)
 def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = crud.get_user(db, form_data.username)
