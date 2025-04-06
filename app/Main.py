@@ -78,4 +78,24 @@ def create_product(
     db.refresh(db_product)
     return db_product
 
+@app.get("/users/history")
+def get_user_history(
+    db: Session = Depends(get_db),
+    user: models.User = Depends(auth.get_current_user)
+):
+    rentals = db.query(models.Rental).filter_by(user_id=user.id).all()
+    purchases = db.query(models.Purchase).filter_by(user_id=user.id).all()
+
+    def serialize(obj):
+        return {
+            "product_name": db.query(models.Product).filter_by(id=obj.product_id).first().name,
+            "rented_at": getattr(obj, "rented_at", None),
+            "purchased_at": getattr(obj, "purchased_at", None)
+        }
+
+    return {
+        "rentals": [serialize(r) for r in rentals],
+        "purchases": [serialize(p) for p in purchases]
+    }
+
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
