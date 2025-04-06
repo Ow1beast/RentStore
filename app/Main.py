@@ -11,57 +11,6 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-# Фоновая задача рассылки уведомлений за 15 дней до окончания аренды
-from fastapi import BackgroundTasks
-from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
-import os
-
-conf = ConnectionConfig(
-    MAIL_USERNAME=os.getenv("MAIL_USERNAME"),
-    MAIL_PASSWORD=os.getenv("MAIL_PASSWORD"),
-    MAIL_FROM=os.getenv("MAIL_FROM"),
-    MAIL_PORT=587,
-    MAIL_SERVER="smtp.gmail.com",
-    MAIL_FROM_NAME="Electro Rental",
-    MAIL_TLS=True,
-    MAIL_SSL=False,
-    USE_CREDENTIALS=True,
-    VALIDATE_CERTS=True
-)
-
-@app.on_event("startup")
-async def schedule_rental_notifications():
-    from asyncio import create_task, sleep
-    async def notify_loop():
-        while True:
-            await notify_expiring_rentals()
-            await sleep(86400)  # раз в сутки
-    create_task(notify_loop())
-
-async def notify_expiring_rentals():
-    db = SessionLocal()
-    try:
-        today = datetime.utcnow()
-        rentals = db.query(models.Rental).all()
-        for r in rentals:
-            if not r.rented_at or not r.days:
-                continue
-            end_date = r.rented_at + timedelta(days=r.days)
-            if (end_date - today).days == 15:
-                user = db.query(models.User).filter_by(id=r.user_id).first()
-                product = db.query(models.Product).filter_by(id=r.product_id).first()
-                if user and product:
-                    message = MessageSchema(
-                        subject="Скоро завершение аренды",
-                        recipients=[user.email],
-                        body=f"Здравствуйте, {user.name}! \n Аренда товара '{product.name}' заканчивается {end_date.strftime('%d.%m.%Y')}. \n Пожалуйста, подготовьтесь к возврату или продлению. \n С уважением, Electro Rental",
-                        subtype="plain"
-                    )
-                    fm = FastMail(conf)
-                    await fm.send_message(message)
-    finally:
-        db.close()
-
 
 @app.post("/users/")
 def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
