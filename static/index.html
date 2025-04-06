@@ -24,7 +24,7 @@
     </form>
     <form id="loginForm">
       <h2>Вход</h2>
-      <input type="text" id="email" placeholder="Email" required />
+      <input type="text" id="username" placeholder="Email" required />
       <input type="password" id="password" placeholder="Пароль" required />
       <button type="submit">Войти</button>
     </form>
@@ -111,7 +111,7 @@
       const data = await res.json();
       if (data.id) {
         const formData = new FormData();
-        formData.append("username", email);
+        formData.append("username", username);
         formData.append("password", password);
         const tokenRes = await fetch("http://13.60.43.210:8000/token", {
           method: "POST",
@@ -131,7 +131,7 @@
 
     document.getElementById("loginForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const email = document.getElementById("email").value;
+      const username = document.getElementById("username").value;
       const password = document.getElementById("password").value;
       const formData = new FormData();
       formData.append("username", email);
