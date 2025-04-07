@@ -324,6 +324,37 @@
               }).join('')}
             </table>` : "<p>Нет аренд.</p>");
       }
-  </script>
+  
+document.getElementById("addProductForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const name = document.getElementById("prodName").value;
+  const description = document.getElementById("prodDesc").value;
+  const price_per_day = parseFloat(document.getElementById("prodRent").value);
+  const purchase_price = parseFloat(document.getElementById("prodBuy").value);
+  const quantity = parseInt(document.getElementById("prodQty").value);
+
+  const product = { name, description, price_per_day, purchase_price, quantity };
+
+  const res = await fetch("http://13.60.43.210:8000/products/", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(product)
+  });
+
+  const result = await res.json();
+  if (res.ok) {
+    alert("Товар успешно добавлен!");
+    loadProducts();
+    document.getElementById("addProductForm").reset();
+  } else {
+    alert("Ошибка при добавлении: " + (result.detail || JSON.stringify(result)));
+  }
+});
+
+</script>
 </body>
 </html>
